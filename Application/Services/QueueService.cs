@@ -93,6 +93,14 @@ public class QueueService : IQueueService
 
             QueueDictionary.Instance.Update(new(code), newQueue);
         }
+        catch (KeyNotFoundException)
+        {
+            throw;
+        }
+        catch (ArgumentException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             throw new InvalidOperationException("Failed to move patient to the next queue.", ex);
@@ -113,6 +121,10 @@ public class QueueService : IQueueService
             queue.RemoveAll(c => c.Code == code);
 
             QueueDictionary.Instance.Remove(new(code));
+        }
+        catch (KeyNotFoundException)
+        {
+            throw;
         }
         catch (Exception ex)
         {

@@ -45,7 +45,7 @@ public class ManagementController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { error = ex.Message });
+            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
