@@ -1,6 +1,9 @@
-﻿namespace DigitalQueue.Domain.Enums
+﻿namespace DigitalQueue.Domain.Enums;
+public enum QueueType
 {
-    public class QueueType
-    {
-    }
+    Reception,
+    Screening,
+    MedicalCare,
+    Exam,
+    Medication
 }
