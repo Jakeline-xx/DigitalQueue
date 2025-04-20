@@ -28,6 +28,13 @@ public class ManagementController : ControllerBase
         return Ok(new { currentCode, peopleAhead, queueName });
     }
 
+    [HttpGet("queues")]
+    public IActionResult GetAllQueues()
+    {
+        var queues = _queueService.GetAllQueues();
+        return Ok(queues);
+    }
+
     [HttpPut("{code}/{queueName}")]
     public IActionResult MovePatient(string code, QueueType queueName)
     {

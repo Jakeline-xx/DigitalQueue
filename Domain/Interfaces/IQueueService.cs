@@ -8,4 +8,5 @@ public interface IQueueService
     (string queueName, int peopleAhead, string currentCode) GetQueueStatus(string code);
     void MoveToNextQueue(string code, QueueType newQueue);
     void RemoveFromQueue(string code);
+    Dictionary<string, List<string>> GetAllQueues();
 }
