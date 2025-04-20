@@ -2,8 +2,6 @@
 using DigitalQueue.Domain.Entities;
 using DigitalQueue.Domain.Enums;
 using DigitalQueue.Domain.Interfaces;
-using DigitalQueue.Domain.Models;
-using System.Collections.Concurrent;
 
 namespace DigitalQueue.Application.Services;
 public class QueueService : IQueueService

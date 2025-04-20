@@ -1,6 +1,5 @@
 using DigitalQueue.Domain.Interfaces;
 using DigitalQueue.Application.Services;
-using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
