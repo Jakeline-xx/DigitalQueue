@@ -22,72 +22,142 @@ public class QueueService : IQueueService
 
     public PatientCode AddToQueue(bool isPriority)
     {
-        var code = isPriority ? $"P{(++_priorityCounter):D4}" : $"C{(++_commonCounter):D4}";
-        var patientCode = new PatientCode(code);
+        try
+        {
+            var code = isPriority ? $"P{(++_priorityCounter):D4}" : $"C{(++_commonCounter):D4}";
+            var patientCode = new PatientCode(code);
 
-        InsertIntoQueue(_queues[QueueType.Reception], patientCode);
+            InsertIntoQueue(_queues[QueueType.Reception], patientCode);
 
-        QueueDictionary.Instance.Add(new(code), QueueType.Reception);
+            QueueDictionary.Instance.Add(new(code), QueueType.Reception);
 
-        return patientCode;
+            return patientCode;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to add patient to the queue.", ex);
+        }
     }
 
     public (string queueName, int peopleAhead, string currentCode) GetQueueStatus(string code)
     {
-        var queueType = QueueDictionary.Instance.GetQueue(new(code));
-        if (queueType == null) throw new Exception("Code not found in any queue.");
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("Code cannot be null or empty.", nameof(code));
 
-        var queue = _queues[queueType.Value];
-        var position = queue.FindIndex(c => c.Code == code);
+        try
+        {
+            var queueType = QueueDictionary.Instance.GetQueue(new(code));
+            if (queueType == null) throw new KeyNotFoundException("Code not found in any queue.");
 
-        return (queueType.ToString(), position, queue.FirstOrDefault()?.Code);
+            var queue = _queues[queueType.Value];
+            var position = queue.FindIndex(c => c.Code == code);
+
+            var currentCode = queue.FirstOrDefault()?.Code ?? string.Empty;
+
+            return (queueType.ToString() ?? string.Empty, position, currentCode);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw;
+        }
+        catch (ArgumentException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to retrieve queue status.", ex);
+        }
     }
 
     public void MoveToNextQueue(string code, QueueType newQueue)
     {
-        var currentQueueType = QueueDictionary.Instance.GetQueue(new(code));
-        if (currentQueueType == null) throw new Exception("Code not found.");
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("Code cannot be null or empty.", nameof(code));
 
-        var currentQueue = _queues[currentQueueType.Value];
-        var patient = currentQueue.FirstOrDefault(c => c.Code == code);
-        if (patient == null) return;
-        currentQueue.Remove(patient);
+        if (!_queues.ContainsKey(newQueue))
+            throw new ArgumentException("Invalid queue type.", nameof(newQueue));
 
-        InsertIntoQueue(_queues[newQueue], patient);
+        try
+        {
+            var currentQueueType = QueueDictionary.Instance.GetQueue(new(code));
+            if (currentQueueType == null) throw new KeyNotFoundException("Code not found.");
 
-        QueueDictionary.Instance.Update(new(code), newQueue);
+            var currentQueue = _queues[currentQueueType.Value];
+            var patient = currentQueue.FirstOrDefault(c => c.Code == code);
+            if (patient == null) throw new KeyNotFoundException("Patient not found in the current queue.");
+
+            currentQueue.Remove(patient);
+
+            InsertIntoQueue(_queues[newQueue], patient);
+
+            QueueDictionary.Instance.Update(new(code), newQueue);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to move patient to the next queue.", ex);
+        }
     }
 
     public void RemoveFromQueue(string code)
     {
-        var queueType = QueueDictionary.Instance.GetQueue(new(code));
-        if (queueType == null) return;
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("Code cannot be null or empty.", nameof(code));
 
-        var queue = _queues[queueType.Value];
-        queue.RemoveAll(c => c.Code == code);
+        try
+        {
+            var queueType = QueueDictionary.Instance.GetQueue(new(code));
+            if (queueType == null) throw new KeyNotFoundException("Code not found.");
 
-        QueueDictionary.Instance.Remove(new(code));
+            var queue = _queues[queueType.Value];
+            queue.RemoveAll(c => c.Code == code);
+
+            QueueDictionary.Instance.Remove(new(code));
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to remove patient from the queue.", ex);
+        }
     }
 
     private void InsertIntoQueue(List<PatientCode> queue, PatientCode patientCode)
     {
-        if (patientCode.IsPriority)
+        if (queue == null)
+            throw new ArgumentNullException(nameof(queue), "Queue cannot be null.");
+
+        if (patientCode == null)
+            throw new ArgumentNullException(nameof(patientCode), "Patient code cannot be null.");
+
+        try
         {
-            int index = queue.FindLastIndex(c => c.IsPriority);
-            queue.Insert(index + 1, patientCode);
+            if (patientCode.IsPriority)
+            {
+                int index = queue.FindLastIndex(c => c.IsPriority);
+                queue.Insert(index + 1, patientCode);
+            }
+            else
+            {
+                queue.Add(patientCode);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            queue.Add(patientCode);
+            throw new InvalidOperationException("Failed to insert patient into the queue.", ex);
         }
     }
 
     public Dictionary<string, List<string>> GetAllQueues()
     {
-        return _queues.ToDictionary(
-            q => q.Key.ToString(),
-            q => q.Value.Select(c => c.Code).ToList()
-        );
+        try
+        {
+            return _queues.ToDictionary(
+                q => q.Key.ToString(),
+                q => q.Value.Select(c => c.Code).ToList()
+            );
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to retrieve all queues.", ex);
+        }
     }
-
 }
