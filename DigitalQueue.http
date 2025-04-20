@@ -1,0 +1,6 @@
+@DigitalQueue_HostAddress = http://localhost:5263
+
+GET {{DigitalQueue_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
