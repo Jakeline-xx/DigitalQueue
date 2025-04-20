@@ -2,6 +2,7 @@
 using DigitalQueue.Domain.Entities;
 using DigitalQueue.Domain.Enums;
 using DigitalQueue.Domain.Interfaces;
+using DigitalQueue.Domain.Models;
 using System.Collections.Concurrent;
 
 namespace DigitalQueue.Application.Services;
@@ -26,14 +27,14 @@ public class QueueService : IQueueService
 
         InsertIntoQueue(_queues[QueueType.Reception], patientCode);
 
-        QueueDictionary.Instance.Add(code, QueueType.Reception);
+        QueueDictionary.Instance.Add(new(code), QueueType.Reception);
 
         return patientCode;
     }
 
     public (string queueName, int peopleAhead, string currentCode) GetQueueStatus(string code)
     {
-        var queueType = QueueDictionary.Instance.GetQueue(code);
+        var queueType = QueueDictionary.Instance.GetQueue(new(code));
         if (queueType == null) throw new Exception("Code not found in any queue.");
 
         var queue = _queues[queueType.Value];
@@ -44,7 +45,7 @@ public class QueueService : IQueueService
 
     public void MoveToNextQueue(string code, QueueType newQueue)
     {
-        var currentQueueType = QueueDictionary.Instance.GetQueue(code);
+        var currentQueueType = QueueDictionary.Instance.GetQueue(new(code));
         if (currentQueueType == null) throw new Exception("Code not found.");
 
         var currentQueue = _queues[currentQueueType.Value];
@@ -54,18 +55,18 @@ public class QueueService : IQueueService
 
         InsertIntoQueue(_queues[newQueue], patient);
 
-        QueueDictionary.Instance.Update(code, newQueue);
+        QueueDictionary.Instance.Update(new(code), newQueue);
     }
 
     public void RemoveFromQueue(string code)
     {
-        var queueType = QueueDictionary.Instance.GetQueue(code);
+        var queueType = QueueDictionary.Instance.GetQueue(new(code));
         if (queueType == null) return;
 
         var queue = _queues[queueType.Value];
         queue.RemoveAll(c => c.Code == code);
 
-        QueueDictionary.Instance.Remove(code);
+        QueueDictionary.Instance.Remove(new(code));
     }
 
     private void InsertIntoQueue(List<PatientCode> queue, PatientCode patientCode)
